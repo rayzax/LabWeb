@@ -289,7 +289,7 @@ const InfrastructurePage = () => {
   const fetchVMData = async (deviceName) => {
     setLoading(prev => ({ ...prev, [deviceName]: true }));
     try {
-      const response = await axios.get(`https://labenv-as.com/internal-api/api/vmstatus/${deviceName}`, {
+      const response = await axios.get(`${API}/vm-status/${deviceName}`, {
         timeout: 10000,
         headers: {
           'Accept': 'application/json',
