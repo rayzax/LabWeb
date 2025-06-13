@@ -489,22 +489,22 @@ const NetworkDiagramPage = () => {
       container: cyRef.current,
       elements: [
         // Physical Infrastructure
-        { data: { id: 'router', label: 'Router/Gateway\n192.168.0.1', type: 'router', layer: 'physical' } },
-        { data: { id: 'switch', label: 'Cisco 350 2G Switch\n192.168.0.93', type: 'switch', layer: 'physical' } },
-        { data: { id: 'proxmox', label: 'Proxmox Server\n192.168.0.15', type: 'hypervisor', layer: 'physical' } },
-        { data: { id: 'docker', label: 'Docker Server\n192.168.0.26', type: 'server', layer: 'physical' } },
+        { data: { id: 'router', label: 'Router\n192.168.0.1', type: 'router', layer: 'physical' } },
+        { data: { id: 'switch', label: 'Cisco Switch\n192.168.0.93', type: 'switch', layer: 'physical' } },
+        { data: { id: 'proxmox', label: 'Proxmox\n192.168.0.15', type: 'hypervisor', layer: 'physical' } },
+        { data: { id: 'docker', label: 'Docker\n192.168.0.26', type: 'server', layer: 'physical' } },
         
         // Virtual Machines - pfSense acts as gateway between networks
-        { data: { id: 'pfsense', label: 'pfSense Firewall\n192.168.0.204\n192.168.1.1', type: 'firewall', layer: 'virtual' } },
+        { data: { id: 'pfsense', label: 'pfSense\n.0.204/.1.1', type: 'firewall', layer: 'virtual' } },
         
         // Lab Network VMs (192.168.1.x)
-        { data: { id: 'ubuntu-web', label: 'Ubuntu Web Server\n192.168.1.102', type: 'webserver', layer: 'virtual' } },
-        { data: { id: 'windows-dc', label: 'Windows DC/DNS\n192.168.1.3', type: 'domaincontroller', layer: 'virtual' } },
-        { data: { id: 'kali', label: 'Kali Attack Box\n192.168.1.103', type: 'security', layer: 'virtual' } },
-        { data: { id: 'windows-ws', label: 'Windows 10 WS\n192.168.1.104', type: 'workstation', layer: 'virtual' } },
+        { data: { id: 'ubuntu-web', label: 'Ubuntu Web\n192.168.1.102', type: 'webserver', layer: 'virtual' } },
+        { data: { id: 'windows-dc', label: 'Win DC\n192.168.1.3', type: 'domaincontroller', layer: 'virtual' } },
+        { data: { id: 'kali', label: 'Kali\n192.168.1.103', type: 'security', layer: 'virtual' } },
+        { data: { id: 'windows-ws', label: 'Win10 WS\n192.168.1.104', type: 'workstation', layer: 'virtual' } },
 
         // Network segments (invisible nodes for grouping)
-        { data: { id: 'net-0', label: '192.168.0.x\nManagement Network', type: 'network', layer: 'network' } },
+        { data: { id: 'net-0', label: '192.168.0.x\nManagement', type: 'network', layer: 'network' } },
         { data: { id: 'net-1', label: '192.168.1.x\nLab Network', type: 'network', layer: 'network' } },
         
         // Physical connections
