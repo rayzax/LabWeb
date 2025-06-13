@@ -1,52 +1,774 @@
-import { useEffect } from "react";
-import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
+import axios from 'axios';
+import cytoscape from 'cytoscape';
+import dagre from 'cytoscape-dagre';
+import { 
+  Activity, 
+  Shield, 
+  Server, 
+  FileText, 
+  Target, 
+  Github, 
+  Linkedin, 
+  Menu, 
+  X,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Cpu,
+  HardDrive,
+  MemoryStick
+} from 'lucide-react';
+import './App.css';
+
+cytoscape.use(dagre);
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
+// Navigation Component
+const Navigation = () => {
+  const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
+  const navItems = [
+    { path: '/', label: 'Home', icon: Activity },
+    { path: '/infrastructure', label: 'Infrastructure', icon: Server },
+    { path: '/soc', label: 'SOC Monitoring', icon: Shield },
+    { path: '/network', label: 'Network Diagram', icon: Activity },
+    { path: '/documentation', label: 'Documentation', icon: FileText },
+    { path: '/threats', label: 'Threat Simulation', icon: Target }
+  ];
 
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
+    <nav className="bg-gray-900 border-b border-gray-700">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center">
+            <NavLink to="/" className="flex-shrink-0 flex items-center">
+              <Shield className="h-8 w-8 text-blue-400" />
+              <span className="ml-2 text-white font-bold text-lg">Drew's Lab</span>
+            </NavLink>
+          </div>
+          
+          {/* Desktop Navigation */}
+          <div className="hidden md:block">
+            <div className="ml-10 flex items-baseline space-x-4">
+              {navItems.map(({ path, label, icon: Icon }) => (
+                <NavLink
+                  key={path}
+                  to={path}
+                  className={({ isActive }) =>
+                    `px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 transition-colors ${
+                      isActive
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    }`
+                  }
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{label}</span>
+                </NavLink>
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700"
+            >
+              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Navigation */}
+        {isOpen && (
+          <div className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              {navItems.map(({ path, label, icon: Icon }) => (
+                <NavLink
+                  key={path}
+                  to={path}
+                  onClick={() => setIsOpen(false)}
+                  className={({ isActive }) =>
+                    `block px-3 py-2 rounded-md text-base font-medium flex items-center space-x-2 transition-colors ${
+                      isActive
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    }`
+                  }
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{label}</span>
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};
+
+// Home/Landing Page Component
+const HomePage = () => {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900">
+      <div className="max-w-4xl mx-auto px-4 py-16">
+        <div className="text-center">
+          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
+            Drew Syverson
+          </h1>
+          <h2 className="text-2xl md:text-3xl text-blue-400 mb-8">
+            Home SOC & IT Lab
+          </h2>
+          <div className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
+            <p className="mb-4 font-semibold text-green-400">
+              "Self-Hosted, Self-Taught, Security-Driven."
+            </p>
+            <p>
+              This is my self-hosted cybersecurity lab designed to simulate a real-world 
+              enterprise network, complete with a firewall, domain controller, SIEM, VPN access, 
+              and web services.
+            </p>
+          </div>
+          
+          <div className="flex justify-center space-x-6 mb-16">
+            <a
+              href="https://github.com/rayzax"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors"
+            >
+              <Github className="h-5 w-5" />
+              <span>GitHub</span>
+            </a>
+            <a
+              href="https://www.linkedin.com/in/andrew-syverson"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
+            >
+              <Linkedin className="h-5 w-5" />
+              <span>LinkedIn</span>
+            </a>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 text-left">
+            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
+              <Server className="h-8 w-8 text-blue-400 mb-3" />
+              <h3 className="text-xl font-semibold text-white mb-2">Infrastructure</h3>
+              <p className="text-gray-300">Real-time monitoring of VM status, resource usage, and system health.</p>
+            </div>
+            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
+              <Shield className="h-8 w-8 text-green-400 mb-3" />
+              <h3 className="text-xl font-semibold text-white mb-2">Security Operations</h3>
+              <p className="text-gray-300">SIEM integration with Wazuh for comprehensive security monitoring.</p>
+            </div>
+            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
+              <Target className="h-8 w-8 text-red-400 mb-3" />
+              <h3 className="text-xl font-semibold text-white mb-2">Threat Testing</h3>
+              <p className="text-gray-300">Controlled attack simulations with MITRE ATT&CK framework mapping.</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
+// VM Status Card Component
+const VMStatusCard = ({ deviceName, vmData, isLoading, error }) => {
+  const getStatusColor = () => {
+    if (error || !vmData) return 'border-red-500 bg-red-50';
+    if (vmData.powerState !== 'running') return 'border-red-500 bg-red-50';
+    if (vmData.cpuUsage > 70 || vmData.memoryUsage > 70) return 'border-orange-500 bg-orange-50';
+    return 'border-green-500 bg-green-50';
+  };
+
+  const getStatusIcon = () => {
+    if (error || !vmData) return <AlertCircle className="h-5 w-5 text-red-500" />;
+    if (vmData.powerState !== 'running') return <AlertCircle className="h-5 w-5 text-red-500" />;
+    if (vmData.cpuUsage > 70 || vmData.memoryUsage > 70) return <Clock className="h-5 w-5 text-orange-500" />;
+    return <CheckCircle className="h-5 w-5 text-green-500" />;
+  };
+
+  return (
+    <div className={`bg-white rounded-lg border-l-4 p-6 shadow-md ${getStatusColor()}`}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-800 capitalize">{deviceName}</h3>
+        {getStatusIcon()}
+      </div>
+      
+      {isLoading ? (
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+        </div>
+      ) : error ? (
+        <div className="text-red-600">
+          <p className="font-medium">Error fetching data</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      ) : vmData ? (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600">Power State:</span>
+            <span className={`font-medium ${vmData.powerState === 'running' ? 'text-green-600' : 'text-red-600'}`}>
+              {vmData.powerState || 'Unknown'}
+            </span>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Cpu className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-600">CPU:</span>
+              </div>
+              <span className="font-medium">{vmData.cpuUsage || 0}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full ${(vmData.cpuUsage || 0) > 70 ? 'bg-red-500' : (vmData.cpuUsage || 0) > 50 ? 'bg-orange-500' : 'bg-green-500'}`}
+                style={{ width: `${vmData.cpuUsage || 0}%` }}
+              ></div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <MemoryStick className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-600">Memory:</span>
+              </div>
+              <span className="font-medium">{vmData.memoryUsage || 0}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full ${(vmData.memoryUsage || 0) > 70 ? 'bg-red-500' : (vmData.memoryUsage || 0) > 50 ? 'bg-orange-500' : 'bg-green-500'}`}
+                style={{ width: `${vmData.memoryUsage || 0}%` }}
+              ></div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <HardDrive className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-600">Disk:</span>
+              </div>
+              <span className="font-medium">{vmData.diskUsage || 0}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full ${(vmData.diskUsage || 0) > 70 ? 'bg-red-500' : (vmData.diskUsage || 0) > 50 ? 'bg-orange-500' : 'bg-green-500'}`}
+                style={{ width: `${vmData.diskUsage || 0}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <p className="text-gray-500">No data available</p>
+      )}
+    </div>
+  );
+};
+
+// Infrastructure Dashboard Component
+const InfrastructurePage = () => {
+  const [vmData, setVmData] = useState({});
+  const [loading, setLoading] = useState({});
+  const [errors, setErrors] = useState({});
+  
+  const devices = ['pfsense', 'dc01', 'UbuWebServ', 'WinWork', 'Kali'];
+
+  const fetchVMData = async (deviceName) => {
+    setLoading(prev => ({ ...prev, [deviceName]: true }));
+    try {
+      const response = await axios.get(`https://labenv-as.com/internal-api/api/vmstatus/${deviceName}`, {
+        timeout: 10000,
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+      
+      setVmData(prev => ({ ...prev, [deviceName]: response.data }));
+      setErrors(prev => ({ ...prev, [deviceName]: null }));
+    } catch (error) {
+      console.error(`Error fetching data for ${deviceName}:`, error);
+      setErrors(prev => ({ 
+        ...prev, 
+        [deviceName]: error.response?.data?.message || error.message || 'Failed to fetch data'
+      }));
+    } finally {
+      setLoading(prev => ({ ...prev, [deviceName]: false }));
+    }
+  };
+
+  useEffect(() => {
+    // Initial fetch
+    devices.forEach(device => fetchVMData(device));
+    
+    // Set up polling every 30 seconds
+    const interval = setInterval(() => {
+      devices.forEach(device => fetchVMData(device));
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleRefresh = () => {
+    devices.forEach(device => fetchVMData(device));
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 py-8">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Infrastructure Dashboard</h1>
+              <p className="text-gray-600">Real-time monitoring of lab environment VMs</p>
+            </div>
+            <button
+              onClick={handleRefresh}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+            >
+              <Activity className="h-4 w-4" />
+              <span>Refresh</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {devices.map(device => (
+            <VMStatusCard
+              key={device}
+              deviceName={device}
+              vmData={vmData[device]}
+              isLoading={loading[device]}
+              error={errors[device]}
+            />
+          ))}
+        </div>
+
+        <div className="mt-8 bg-white rounded-lg p-6 shadow-md">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">System Overview</h2>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {devices.map(device => {
+              const data = vmData[device];
+              const isOnline = data?.powerState === 'running';
+              return (
+                <div key={device} className="text-center">
+                  <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <p className="text-sm font-medium text-gray-700 capitalize">{device}</p>
+                  <p className="text-xs text-gray-500">{isOnline ? 'Online' : 'Offline'}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// SOC Monitoring Component
+const SOCPage = () => {
+  return (
+    <div className="min-h-screen bg-gray-100 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">SOC Monitoring</h1>
+        
+        <div className="bg-white rounded-lg p-6 shadow-md mb-6">
+          <div className="flex items-center mb-4">
+            <Shield className="h-8 w-8 text-blue-600 mr-3" />
+            <h2 className="text-2xl font-semibold text-gray-800">Wazuh SIEM Dashboard</h2>
+          </div>
+          
+          <p className="text-gray-600 mb-6">
+            Wazuh serves as the central SIEM (Security Information and Event Management) solution 
+            for this lab environment, providing comprehensive security monitoring and threat detection.
+          </p>
+          
+          <a
+            href="https://labenv-as.com/wazuh"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
+          >
+            <Shield className="h-5 w-5 mr-2" />
+            Access Wazuh Dashboard
+          </a>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div className="bg-white rounded-lg p-6 shadow-md">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">Log Collection</h3>
+            <ul className="space-y-2 text-gray-600">
+              <li className="flex items-center">
+                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                Windows Event Logs
+              </li>
+              <li className="flex items-center">
+                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                Sysmon Events
+              </li>
+              <li className="flex items-center">
+                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                pfSense Firewall Logs
+              </li>
+              <li className="flex items-center">
+                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                Linux System Logs
+              </li>
+              <li className="flex items-center">
+                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                Application Logs
+              </li>
+            </ul>
+          </div>
+
+          <div className="bg-white rounded-lg p-6 shadow-md">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">Detection Capabilities</h3>
+            <ul className="space-y-2 text-gray-600">
+              <li className="flex items-center">
+                <AlertCircle className="h-4 w-4 text-orange-500 mr-2" />
+                Intrusion Detection
+              </li>
+              <li className="flex items-center">
+                <AlertCircle className="h-4 w-4 text-orange-500 mr-2" />
+                Malware Detection
+              </li>
+              <li className="flex items-center">
+                <AlertCircle className="h-4 w-4 text-orange-500 mr-2" />
+                Policy Violations
+              </li>
+              <li className="flex items-center">
+                <AlertCircle className="h-4 w-4 text-orange-500 mr-2" />
+                Anomaly Detection
+              </li>
+              <li className="flex items-center">
+                <AlertCircle className="h-4 w-4 text-orange-500 mr-2" />
+                Compliance Monitoring
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg p-6 shadow-md">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">Sample Alerts & Detection Rules</h3>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p className="text-yellow-800 font-medium">Coming Soon</p>
+            <p className="text-yellow-700 text-sm">Sample alerts with timestamps and detection rules will be uploaded here later.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Network Diagram Component
+const NetworkDiagramPage = () => {
+  const cyRef = React.useRef();
+
+  useEffect(() => {
+    const cy = cytoscape({
+      container: cyRef.current,
+      elements: [
+        // Nodes
+        { data: { id: 'proxmox', label: 'Proxmox Host\n(Hypervisor)', type: 'host' } },
+        { data: { id: 'pfsense', label: 'pfSense\n(Firewall/Router)', type: 'firewall' } },
+        { data: { id: 'dc01', label: 'DC01\n(Domain Controller)', type: 'server' } },
+        { data: { id: 'ubuwebserv', label: 'UbuWebServ\n(Web Server)', type: 'server' } },
+        { data: { id: 'winwork', label: 'WinWork\n(Workstation)', type: 'workstation' } },
+        { data: { id: 'kali', label: 'Kali\n(Penetration Testing)', type: 'security' } },
+        
+        // Edges
+        { data: { source: 'proxmox', target: 'pfsense' } },
+        { data: { source: 'pfsense', target: 'dc01' } },
+        { data: { source: 'pfsense', target: 'ubuwebserv' } },
+        { data: { source: 'pfsense', target: 'winwork' } },
+        { data: { source: 'pfsense', target: 'kali' } },
+      ],
+      style: [
+        {
+          selector: 'node',
+          style: {
+            'background-color': 'data(color)',
+            'label': 'data(label)',
+            'text-valign': 'center',
+            'text-halign': 'center',
+            'color': '#fff',
+            'text-outline-color': '#000',
+            'text-outline-width': 1,
+            'font-size': '12px',
+            'width': 80,
+            'height': 80,
+          }
+        },
+        {
+          selector: 'node[type="host"]',
+          style: {
+            'background-color': '#3B82F6',
+          }
+        },
+        {
+          selector: 'node[type="firewall"]',
+          style: {
+            'background-color': '#EF4444',
+          }
+        },
+        {
+          selector: 'node[type="server"]',
+          style: {
+            'background-color': '#10B981',
+          }
+        },
+        {
+          selector: 'node[type="workstation"]',
+          style: {
+            'background-color': '#F59E0B',
+          }
+        },
+        {
+          selector: 'node[type="security"]',
+          style: {
+            'background-color': '#8B5CF6',
+          }
+        },
+        {
+          selector: 'edge',
+          style: {
+            'width': 3,
+            'line-color': '#ccc',
+            'target-arrow-color': '#ccc',
+            'target-arrow-shape': 'triangle',
+          }
+        }
+      ],
+      layout: {
+        name: 'dagre',
+        directed: true,
+        padding: 10
+      }
+    });
+
+    // Add click event handler
+    cy.on('tap', 'node', function(evt) {
+      const node = evt.target;
+      const nodeId = node.id();
+      
+      const nodeInfo = {
+        proxmox: {
+          role: 'Hypervisor Host',
+          function: 'Runs all virtual machines using Proxmox VE',
+          ip: '192.168.0.100'
+        },
+        pfsense: {
+          role: 'Firewall & Router',
+          function: 'Network security, routing, and VPN access',
+          ip: '192.168.0.1'
+        },
+        dc01: {
+          role: 'Domain Controller',
+          function: 'Active Directory services and authentication',
+          ip: '192.168.0.10'
+        },
+        ubuwebserv: {
+          role: 'Web Server',
+          function: 'Hosts web applications and services',
+          ip: '192.168.0.20'
+        },
+        winwork: {
+          role: 'Windows Workstation',
+          function: 'Client machine for testing and administration',
+          ip: '192.168.0.30'
+        },
+        kali: {
+          role: 'Security Testing',
+          function: 'Penetration testing and security assessment',
+          ip: '192.168.0.40'
+        }
+      };
+
+      const info = nodeInfo[nodeId];
+      if (info) {
+        alert(`${nodeId.toUpperCase()}\n\nRole: ${info.role}\nFunction: ${info.function}\nIP: ${info.ip}`);
+      }
+    });
+
+    return () => {
+      cy.destroy();
+    };
+  }, []);
+
+  const deviceInfo = [
+    { name: 'Proxmox Host', role: 'Hypervisor', color: 'bg-blue-500', ip: '192.168.0.100' },
+    { name: 'pfSense', role: 'Firewall/Router', color: 'bg-red-500', ip: '192.168.0.1' },
+    { name: 'DC01', role: 'Domain Controller', color: 'bg-green-500', ip: '192.168.0.10' },
+    { name: 'UbuWebServ', role: 'Web Server', color: 'bg-green-500', ip: '192.168.0.20' },
+    { name: 'WinWork', role: 'Workstation', color: 'bg-yellow-500', ip: '192.168.0.30' },
+    { name: 'Kali', role: 'Security Testing', color: 'bg-purple-500', ip: '192.168.0.40' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-100 py-8">
+      <div className="max-w-6xl mx-auto px-4">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Network Diagram</h1>
+        
+        <div className="bg-white rounded-lg shadow-md mb-6">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-800">Interactive Lab Network</h2>
+            <p className="text-gray-600">Click on any node to view details</p>
+          </div>
+          <div ref={cyRef} style={{ width: '100%', height: '500px' }}></div>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {deviceInfo.map((device, index) => (
+            <div key={index} className="bg-white rounded-lg p-4 shadow-md">
+              <div className="flex items-center mb-2">
+                <div className={`w-4 h-4 rounded-full ${device.color} mr-3`}></div>
+                <h3 className="font-semibold text-gray-800">{device.name}</h3>
+              </div>
+              <p className="text-gray-600 text-sm mb-1">{device.role}</p>
+              <p className="text-gray-500 text-xs">{device.ip}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Documentation Component
+const DocumentationPage = () => {
+  const docs = [
+    {
+      title: 'Lab Architecture and Segmentation',
+      description: 'Detailed overview of network design, VLAN configuration, and security zones.',
+      status: 'placeholder'
+    },
+    {
+      title: 'VPN and Firewall Configuration (pfSense)',
+      description: 'Step-by-step guide for setting up VPN access and firewall rules.',
+      status: 'placeholder'
+    },
+    {
+      title: 'Reverse Proxy and HTTPS (NGINX + Let\'s Encrypt)',
+      description: 'Configuration guide for web services with SSL/TLS termination.',
+      status: 'placeholder'
+    },
+    {
+      title: 'Wazuh Alert Setup and Configuration',
+      description: 'SIEM deployment, agent installation, and custom rule creation.',
+      status: 'placeholder'
+    },
+    {
+      title: 'Domain Controller Setup and AD Usage',
+      description: 'Active Directory deployment and management best practices.',
+      status: 'placeholder'
+    },
+    {
+      title: 'Device Hardening Basics',
+      description: 'Security baseline configurations for Windows and Linux systems.',
+      status: 'placeholder'
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-100 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Documentation</h1>
+        
+        <div className="space-y-6">
+          {docs.map((doc, index) => (
+            <div key={index} className="bg-white rounded-lg p-6 shadow-md">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h2 className="text-xl font-semibold text-gray-800 mb-2">{doc.title}</h2>
+                  <p className="text-gray-600 mb-4">{doc.description}</p>
+                  {doc.status === 'placeholder' && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-blue-800 font-medium text-sm">Coming Soon</p>
+                      <p className="text-blue-700 text-sm">Documentation content will be added here.</p>
+                    </div>
+                  )}
+                </div>
+                <FileText className="h-6 w-6 text-gray-400 ml-4" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Threat Simulation Component
+const ThreatSimulationPage = () => {
+  return (
+    <div className="min-h-screen bg-gray-100 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Threat Simulation</h1>
+        
+        <div className="bg-white rounded-lg p-6 shadow-md mb-6">
+          <div className="flex items-center mb-4">
+            <Target className="h-8 w-8 text-red-600 mr-3" />
+            <h2 className="text-2xl font-semibold text-gray-800">Attack Testing & Analysis</h2>
+          </div>
+          <p className="text-gray-600 mb-6">
+            This section will contain detailed walkthroughs of controlled attack simulations 
+            performed in the lab environment, along with corresponding security alerts and analysis.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-1 gap-6">
+          <div className="bg-white rounded-lg p-6 shadow-md">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">Planned Content</h3>
+            <div className="space-y-4">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h4 className="font-medium text-yellow-800 mb-2">Attack Walkthroughs</h4>
+                <p className="text-yellow-700 text-sm">Step-by-step documentation of simulated attacks and techniques tested in the lab.</p>
+              </div>
+              
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h4 className="font-medium text-yellow-800 mb-2">Wazuh Alert Correlation</h4>
+                <p className="text-yellow-700 text-sm">Analysis of SIEM alerts generated during attack simulations with timeline correlation.</p>
+              </div>
+              
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h4 className="font-medium text-yellow-800 mb-2">MITRE ATT&CK Mapping</h4>
+                <p className="text-yellow-700 text-sm">Each tested technique mapped to the MITRE ATT&CK framework for comprehensive threat modeling.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Main App Component
 function App() {
   return (
     <div className="App">
-      <BrowserRouter>
+      <Router>
+        <Navigation />
         <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/infrastructure" element={<InfrastructurePage />} />
+          <Route path="/soc" element={<SOCPage />} />
+          <Route path="/network" element={<NetworkDiagramPage />} />
+          <Route path="/documentation" element={<DocumentationPage />} />
+          <Route path="/threats" element={<ThreatSimulationPage />} />
         </Routes>
-      </BrowserRouter>
+      </Router>
     </div>
   );
 }
