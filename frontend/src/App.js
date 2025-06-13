@@ -561,8 +561,8 @@ const NetworkDiagramPage = () => {
           style: {
             'background-color': '#1e40af', // Deep blue
             'border-color': '#1e3a8a',
-            'width': 120,
-            'height': 80,
+            'width': 130,
+            'height': 90,
             'shape': 'round-rectangle'
           }
         },
@@ -572,7 +572,7 @@ const NetworkDiagramPage = () => {
             'background-color': '#059669', // Emerald
             'border-color': '#047857',
             'width': 140,
-            'height': 60,
+            'height': 80,
             'shape': 'round-rectangle'
           }
         },
@@ -591,8 +591,8 @@ const NetworkDiagramPage = () => {
           style: {
             'background-color': '#0891b2', // Cyan
             'border-color': '#0e7490',
-            'width': 110,
-            'height': 80,
+            'width': 120,
+            'height': 90,
             'shape': 'round-rectangle'
           }
         },
@@ -603,8 +603,8 @@ const NetworkDiagramPage = () => {
           style: {
             'background-color': '#dc2626', // Red
             'border-color': '#b91c1c',
-            'width': 120,
-            'height': 90,
+            'width': 130,
+            'height': 100,
             'shape': 'diamond'
           }
         },
@@ -613,8 +613,8 @@ const NetworkDiagramPage = () => {
           style: {
             'background-color': '#16a34a', // Green
             'border-color': '#15803d',
-            'width': 100,
-            'height': 80,
+            'width': 130,
+            'height': 90,
             'shape': 'round-rectangle'
           }
         },
@@ -623,8 +623,8 @@ const NetworkDiagramPage = () => {
           style: {
             'background-color': '#2563eb', // Blue
             'border-color': '#1d4ed8',
-            'width': 110,
-            'height': 80,
+            'width': 120,
+            'height': 90,
             'shape': 'round-rectangle'
           }
         },
@@ -633,8 +633,8 @@ const NetworkDiagramPage = () => {
           style: {
             'background-color': '#7c2d12', // Dark red
             'border-color': '#991b1b',
-            'width': 100,
-            'height': 80,
+            'width': 120,
+            'height': 90,
             'shape': 'round-rectangle'
           }
         },
@@ -643,8 +643,8 @@ const NetworkDiagramPage = () => {
           style: {
             'background-color': '#ea580c', // Orange
             'border-color': '#c2410c',
-            'width': 100,
-            'height': 80,
+            'width': 130,
+            'height': 90,
             'shape': 'round-rectangle'
           }
         },
