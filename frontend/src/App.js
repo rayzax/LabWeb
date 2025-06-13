@@ -482,130 +482,361 @@ const SOCPage = () => {
 // Network Diagram Component
 const NetworkDiagramPage = () => {
   const cyRef = React.useRef();
+  const [selectedNode, setSelectedNode] = useState(null);
 
   useEffect(() => {
     const cy = cytoscape({
       container: cyRef.current,
       elements: [
-        // Nodes
-        { data: { id: 'proxmox', label: 'Proxmox Host\n(Hypervisor)', type: 'host' } },
-        { data: { id: 'pfsense', label: 'pfSense\n(Firewall/Router)', type: 'firewall' } },
-        { data: { id: 'dc01', label: 'DC01\n(Domain Controller)', type: 'server' } },
-        { data: { id: 'ubuwebserv', label: 'UbuWebServ\n(Web Server)', type: 'server' } },
-        { data: { id: 'winwork', label: 'WinWork\n(Workstation)', type: 'workstation' } },
-        { data: { id: 'kali', label: 'Kali\n(Penetration Testing)', type: 'security' } },
+        // Physical Infrastructure
+        { data: { id: 'router', label: 'Router/Gateway\n192.168.0.1', type: 'router', layer: 'physical' } },
+        { data: { id: 'switch', label: 'Cisco 350 2G Switch\n192.168.0.93', type: 'switch', layer: 'physical' } },
+        { data: { id: 'proxmox', label: 'Proxmox Server\n192.168.0.15', type: 'hypervisor', layer: 'physical' } },
+        { data: { id: 'docker', label: 'Docker Server\n192.168.0.26', type: 'server', layer: 'physical' } },
         
-        // Edges
-        { data: { source: 'proxmox', target: 'pfsense' } },
-        { data: { source: 'pfsense', target: 'dc01' } },
-        { data: { source: 'pfsense', target: 'ubuwebserv' } },
-        { data: { source: 'pfsense', target: 'winwork' } },
-        { data: { source: 'pfsense', target: 'kali' } },
+        // Virtual Machines - pfSense acts as gateway between networks
+        { data: { id: 'pfsense', label: 'pfSense Firewall\n192.168.0.204\n192.168.1.1', type: 'firewall', layer: 'virtual' } },
+        
+        // Lab Network VMs (192.168.1.x)
+        { data: { id: 'ubuntu-web', label: 'Ubuntu Web Server\n192.168.1.102', type: 'webserver', layer: 'virtual' } },
+        { data: { id: 'windows-dc', label: 'Windows DC/DNS\n192.168.1.3', type: 'domaincontroller', layer: 'virtual' } },
+        { data: { id: 'kali', label: 'Kali Attack Box\n192.168.1.103', type: 'security', layer: 'virtual' } },
+        { data: { id: 'windows-ws', label: 'Windows 10 WS\n192.168.1.104', type: 'workstation', layer: 'virtual' } },
+
+        // Network segments (invisible nodes for grouping)
+        { data: { id: 'net-0', label: '192.168.0.x\nManagement Network', type: 'network', layer: 'network' } },
+        { data: { id: 'net-1', label: '192.168.1.x\nLab Network', type: 'network', layer: 'network' } },
+        
+        // Physical connections
+        { data: { source: 'router', target: 'switch', type: 'physical' } },
+        { data: { source: 'switch', target: 'proxmox', type: 'physical' } },
+        { data: { source: 'switch', target: 'docker', type: 'physical' } },
+        
+        // Virtual connections within Proxmox
+        { data: { source: 'proxmox', target: 'pfsense', type: 'virtual' } },
+        
+        // Lab network connections through pfSense
+        { data: { source: 'pfsense', target: 'ubuntu-web', type: 'virtual' } },
+        { data: { source: 'pfsense', target: 'windows-dc', type: 'virtual' } },
+        { data: { source: 'pfsense', target: 'kali', type: 'virtual' } },
+        { data: { source: 'pfsense', target: 'windows-ws', type: 'virtual' } },
+
+        // Network segment connections (for visual grouping)
+        { data: { source: 'switch', target: 'net-0', type: 'network' } },
+        { data: { source: 'pfsense', target: 'net-1', type: 'network' } },
       ],
       style: [
+        // Base node styling
         {
           selector: 'node',
           style: {
-            'background-color': 'data(color)',
             'label': 'data(label)',
             'text-valign': 'center',
             'text-halign': 'center',
-            'color': '#fff',
-            'text-outline-color': '#000',
-            'text-outline-width': 1,
-            'font-size': '12px',
-            'width': 80,
+            'color': '#ffffff',
+            'text-outline-color': '#000000',
+            'text-outline-width': 2,
+            'font-size': '11px',
+            'font-weight': 'bold',
+            'width': 100,
+            'height': 100,
+            'border-width': 3,
+            'border-opacity': 0.8,
+            'background-opacity': 0.9,
+            'shadow-blur': 10,
+            'shadow-color': '#000000',
+            'shadow-opacity': 0.3,
+            'shadow-offset-x': 3,
+            'shadow-offset-y': 3,
+            'transition-property': 'background-color, border-color, width, height',
+            'transition-duration': '0.3s'
+          }
+        },
+
+        // Physical Infrastructure Styling
+        {
+          selector: 'node[type="router"]',
+          style: {
+            'background-color': '#1e40af', // Deep blue
+            'border-color': '#1e3a8a',
+            'width': 120,
             'height': 80,
+            'shape': 'round-rectangle'
           }
         },
         {
-          selector: 'node[type="host"]',
+          selector: 'node[type="switch"]',
           style: {
-            'background-color': '#3B82F6',
+            'background-color': '#059669', // Emerald
+            'border-color': '#047857',
+            'width': 140,
+            'height': 60,
+            'shape': 'round-rectangle'
           }
         },
         {
-          selector: 'node[type="firewall"]',
+          selector: 'node[type="hypervisor"]',
           style: {
-            'background-color': '#EF4444',
+            'background-color': '#7c3aed', // Purple
+            'border-color': '#6d28d9',
+            'width': 130,
+            'height': 90,
+            'shape': 'round-rectangle'
           }
         },
         {
           selector: 'node[type="server"]',
           style: {
-            'background-color': '#10B981',
+            'background-color': '#0891b2', // Cyan
+            'border-color': '#0e7490',
+            'width': 110,
+            'height': 80,
+            'shape': 'round-rectangle'
+          }
+        },
+
+        // Virtual Machine Styling
+        {
+          selector: 'node[type="firewall"]',
+          style: {
+            'background-color': '#dc2626', // Red
+            'border-color': '#b91c1c',
+            'width': 120,
+            'height': 90,
+            'shape': 'diamond'
           }
         },
         {
-          selector: 'node[type="workstation"]',
+          selector: 'node[type="webserver"]',
           style: {
-            'background-color': '#F59E0B',
+            'background-color': '#16a34a', // Green
+            'border-color': '#15803d',
+            'width': 100,
+            'height': 80,
+            'shape': 'round-rectangle'
+          }
+        },
+        {
+          selector: 'node[type="domaincontroller"]',
+          style: {
+            'background-color': '#2563eb', // Blue
+            'border-color': '#1d4ed8',
+            'width': 110,
+            'height': 80,
+            'shape': 'round-rectangle'
           }
         },
         {
           selector: 'node[type="security"]',
           style: {
-            'background-color': '#8B5CF6',
+            'background-color': '#7c2d12', // Dark red
+            'border-color': '#991b1b',
+            'width': 100,
+            'height': 80,
+            'shape': 'round-rectangle'
           }
         },
         {
+          selector: 'node[type="workstation"]',
+          style: {
+            'background-color': '#ea580c', // Orange
+            'border-color': '#c2410c',
+            'width': 100,
+            'height': 80,
+            'shape': 'round-rectangle'
+          }
+        },
+
+        // Network segment styling
+        {
+          selector: 'node[type="network"]',
+          style: {
+            'background-color': '#374151',
+            'border-color': '#4b5563',
+            'width': 160,
+            'height': 50,
+            'shape': 'round-rectangle',
+            'opacity': 0.7,
+            'font-size': '10px',
+            'color': '#d1d5db'
+          }
+        },
+
+        // Edge styling
+        {
           selector: 'edge',
           style: {
-            'width': 3,
-            'line-color': '#ccc',
-            'target-arrow-color': '#ccc',
+            'width': 4,
             'target-arrow-shape': 'triangle',
+            'target-arrow-size': 10,
+            'curve-style': 'bezier',
+            'opacity': 0.8
+          }
+        },
+        {
+          selector: 'edge[type="physical"]',
+          style: {
+            'line-color': '#1f2937',
+            'target-arrow-color': '#1f2937',
+            'width': 6
+          }
+        },
+        {
+          selector: 'edge[type="virtual"]',
+          style: {
+            'line-color': '#3b82f6',
+            'target-arrow-color': '#3b82f6',
+            'line-style': 'dashed',
+            'width': 3
+          }
+        },
+        {
+          selector: 'edge[type="network"]',
+          style: {
+            'line-color': '#6b7280',
+            'target-arrow-color': '#6b7280',
+            'width': 2,
+            'opacity': 0.5,
+            'line-style': 'dotted'
+          }
+        },
+
+        // Hover effects
+        {
+          selector: 'node:active',
+          style: {
+            'overlay-opacity': 0.2,
+            'overlay-color': '#3b82f6',
+            'width': 'mapData(width, 80, 160, 90, 170)',
+            'height': 'mapData(height, 60, 120, 70, 130)'
+          }
+        },
+
+        // Selected state
+        {
+          selector: '.selected',
+          style: {
+            'border-width': 5,
+            'border-color': '#fbbf24',
+            'background-color': 'mapData(background-color, #000000, #ffffff, #333333, #cccccc)'
           }
         }
       ],
       layout: {
-        name: 'dagre',
-        directed: true,
-        padding: 10
+        name: 'preset',
+        positions: {
+          'router': { x: 400, y: 50 },
+          'switch': { x: 400, y: 150 },
+          'proxmox': { x: 250, y: 250 },
+          'docker': { x: 550, y: 250 },
+          'pfsense': { x: 250, y: 350 },
+          'ubuntu-web': { x: 100, y: 450 },
+          'windows-dc': { x: 200, y: 450 },
+          'kali': { x: 300, y: 450 },
+          'windows-ws': { x: 400, y: 450 },
+          'net-0': { x: 600, y: 100 },
+          'net-1': { x: 450, y: 350 }
+        },
+        fit: true,
+        padding: 50
       }
     });
 
-    // Add click event handler
+    // Enhanced interaction handlers
     cy.on('tap', 'node', function(evt) {
       const node = evt.target;
       const nodeId = node.id();
       
+      // Remove previous selection
+      cy.elements().removeClass('selected');
+      // Add selection to clicked node
+      node.addClass('selected');
+      
       const nodeInfo = {
+        router: {
+          role: 'Network Gateway',
+          function: 'Primary internet gateway and router for the lab network',
+          ip: '192.168.0.1',
+          type: 'Physical',
+          os: 'Router Firmware'
+        },
+        switch: {
+          role: 'Network Switch',
+          function: 'Cisco 350 2G managed switch providing network connectivity',
+          ip: '192.168.0.93',
+          type: 'Physical',
+          os: 'Cisco IOS'
+        },
         proxmox: {
           role: 'Hypervisor Host',
-          function: 'Runs all virtual machines using Proxmox VE',
-          ip: '192.168.0.100'
+          function: 'Proxmox VE hypervisor hosting virtual machines',
+          ip: '192.168.0.15',
+          type: 'Physical',
+          os: 'Proxmox VE'
+        },
+        docker: {
+          role: 'Container Host',
+          function: 'Docker container server for containerized applications',
+          ip: '192.168.0.26',
+          type: 'Physical',
+          os: 'Linux'
         },
         pfsense: {
-          role: 'Firewall & Router',
-          function: 'Network security, routing, and VPN access',
-          ip: '192.168.0.1'
+          role: 'Firewall & Gateway',
+          function: 'Network security and routing between lab segments',
+          ip: '192.168.0.204 / 192.168.1.1',
+          type: 'Virtual Machine',
+          os: 'pfSense'
         },
-        dc01: {
-          role: 'Domain Controller',
-          function: 'Active Directory services and authentication',
-          ip: '192.168.0.10'
-        },
-        ubuwebserv: {
+        'ubuntu-web': {
           role: 'Web Server',
-          function: 'Hosts web applications and services',
-          ip: '192.168.0.20'
+          function: 'Ubuntu server hosting web applications and services',
+          ip: '192.168.1.102',
+          type: 'Virtual Machine',
+          os: 'Ubuntu Linux'
         },
-        winwork: {
-          role: 'Windows Workstation',
-          function: 'Client machine for testing and administration',
-          ip: '192.168.0.30'
+        'windows-dc': {
+          role: 'Domain Controller',
+          function: 'Windows Server providing Active Directory and DNS services',
+          ip: '192.168.1.3',
+          type: 'Virtual Machine',
+          os: 'Windows Server'
         },
         kali: {
           role: 'Security Testing',
-          function: 'Penetration testing and security assessment',
-          ip: '192.168.0.40'
+          function: 'Kali Linux for penetration testing and security assessment',
+          ip: '192.168.1.103',
+          type: 'Virtual Machine',
+          os: 'Kali Linux'
+        },
+        'windows-ws': {
+          role: 'Workstation',
+          function: 'Windows 10 client for testing and administration',
+          ip: '192.168.1.104',
+          type: 'Virtual Machine',
+          os: 'Windows 10'
         }
       };
 
       const info = nodeInfo[nodeId];
       if (info) {
-        alert(`${nodeId.toUpperCase()}\n\nRole: ${info.role}\nFunction: ${info.function}\nIP: ${info.ip}`);
+        setSelectedNode(info);
+      }
+    });
+
+    // Hover effects
+    cy.on('mouseover', 'node', function(evt) {
+      const node = evt.target;
+      node.style({
+        'width': node.style('width') * 1.1,
+        'height': node.style('height') * 1.1
+      });
+    });
+
+    cy.on('mouseout', 'node', function(evt) {
+      const node = evt.target;
+      if (!node.hasClass('selected')) {
+        node.removeStyle('width height');
       }
     });
 
@@ -614,37 +845,87 @@ const NetworkDiagramPage = () => {
     };
   }, []);
 
-  const deviceInfo = [
-    { name: 'Proxmox Host', role: 'Hypervisor', color: 'bg-blue-500', ip: '192.168.0.100' },
-    { name: 'pfSense', role: 'Firewall/Router', color: 'bg-red-500', ip: '192.168.0.1' },
-    { name: 'DC01', role: 'Domain Controller', color: 'bg-green-500', ip: '192.168.0.10' },
-    { name: 'UbuWebServ', role: 'Web Server', color: 'bg-green-500', ip: '192.168.0.20' },
-    { name: 'WinWork', role: 'Workstation', color: 'bg-yellow-500', ip: '192.168.0.30' },
-    { name: 'Kali', role: 'Security Testing', color: 'bg-purple-500', ip: '192.168.0.40' },
+  const networkSegments = [
+    {
+      name: '192.168.0.x - Management Network',
+      description: 'Physical infrastructure and management interfaces',
+      devices: ['Router/Gateway', 'Cisco Switch', 'Proxmox Server', 'Docker Server'],
+      color: 'border-blue-500'
+    },
+    {
+      name: '192.168.1.x - Lab Network',
+      description: 'Isolated virtual lab environment for testing',
+      devices: ['Ubuntu Web Server', 'Windows DC/DNS', 'Kali Attack Box', 'Windows 10 WS'],
+      color: 'border-green-500'
+    }
   ];
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
-      <div className="max-w-6xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Network Diagram</h1>
+      <div className="max-w-7xl mx-auto px-4">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Network Architecture</h1>
         
-        <div className="bg-white rounded-lg shadow-md mb-6">
-          <div className="p-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-800">Interactive Lab Network</h2>
-            <p className="text-gray-600">Click on any node to view details</p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow-md">
+              <div className="p-4 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-800">Interactive Network Topology</h2>
+                <p className="text-gray-600">Click on devices to view detailed information</p>
+              </div>
+              <div ref={cyRef} style={{ width: '100%', height: '600px', backgroundColor: '#f8fafc' }}></div>
+            </div>
           </div>
-          <div ref={cyRef} style={{ width: '100%', height: '500px' }}></div>
+
+          <div className="space-y-4">
+            {selectedNode && (
+              <div className="bg-white rounded-lg p-6 shadow-md border-l-4 border-blue-500">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Device Details</h3>
+                <div className="space-y-2 text-sm">
+                  <div><span className="font-medium">Role:</span> {selectedNode.role}</div>
+                  <div><span className="font-medium">IP Address:</span> {selectedNode.ip}</div>
+                  <div><span className="font-medium">Type:</span> {selectedNode.type}</div>
+                  <div><span className="font-medium">OS:</span> {selectedNode.os}</div>
+                  <div className="pt-2">
+                    <span className="font-medium">Function:</span>
+                    <p className="text-gray-600 mt-1">{selectedNode.function}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white rounded-lg p-6 shadow-md">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Legend</h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center">
+                  <div className="w-4 h-4 bg-gray-800 mr-3 rounded"></div>
+                  <span>Physical Connection</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-4 h-4 border-2 border-blue-500 border-dashed mr-3 rounded"></div>
+                  <span>Virtual Connection</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-4 h-4 border-2 border-gray-400 border-dotted mr-3 rounded"></div>
+                  <span>Network Segment</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {deviceInfo.map((device, index) => (
-            <div key={index} className="bg-white rounded-lg p-4 shadow-md">
-              <div className="flex items-center mb-2">
-                <div className={`w-4 h-4 rounded-full ${device.color} mr-3`}></div>
-                <h3 className="font-semibold text-gray-800">{device.name}</h3>
+        <div className="grid md:grid-cols-2 gap-6">
+          {networkSegments.map((segment, index) => (
+            <div key={index} className={`bg-white rounded-lg p-6 shadow-md border-l-4 ${segment.color}`}>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">{segment.name}</h3>
+              <p className="text-gray-600 mb-4">{segment.description}</p>
+              <div className="space-y-1">
+                {segment.devices.map((device, idx) => (
+                  <div key={idx} className="flex items-center text-sm text-gray-700">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
+                    {device}
+                  </div>
+                ))}
               </div>
-              <p className="text-gray-600 text-sm mb-1">{device.role}</p>
-              <p className="text-gray-500 text-xs">{device.ip}</p>
             </div>
           ))}
         </div>
