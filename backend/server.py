@@ -129,6 +129,19 @@ async def get_vm_status(device_name: str):
                     "lastUpdated": datetime.utcnow().isoformat(),
                     "status": "success"
                 }
+            elif response.status_code == 404:
+                # Handle 404 specially - device might not exist or be offline
+                logger.warning(f"Device {device_name} not found in external API")
+                return {
+                    "deviceName": device_name,
+                    "powerState": "offline",
+                    "cpuUsage": 0,
+                    "memoryUsage": 0,
+                    "diskUsage": 0,
+                    "lastUpdated": datetime.utcnow().isoformat(),
+                    "status": "offline",
+                    "message": "Device not found or offline"
+                }
             else:
                 logger.error(f"External API returned status {response.status_code} for device {device_name}")
                 raise HTTPException(
